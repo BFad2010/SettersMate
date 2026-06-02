@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,7 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.corp.bookmate.settermate.R
 import com.corp.bookmate.settermate.helpers.extractOpponent
@@ -157,11 +160,26 @@ fun TeamScheduleScreen(
                                 teamName,
                             )
 
-                            Text(
-                                text = "${playTime.time} vs $opponent",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = colorResource(R.color.WhiteSmoke),
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = "${playTime.time} vs $opponent",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = colorResource(R.color.WhiteSmoke),
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                if (playTime.court.isNotEmpty()) {
+                                    Text(
+                                        text = playTime.court,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colorResource(R.color.WhiteSmoke),
+                                        fontStyle = FontStyle.Italic,
+                                    )
+                                }
+                            }
                         }
                     }
                 }

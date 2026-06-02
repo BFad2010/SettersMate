@@ -1,7 +1,6 @@
 package com.corp.bookmate.settermate
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,15 +40,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.corp.bookmate.settermate.helpers.fuzzyTeamMatch
 import com.corp.bookmate.settermate.service.TeamStanding
 import com.corp.bookmate.settermate.service.daysMap
+import com.corp.bookmate.settermate.ui.LeaguesUiState
 import com.corp.bookmate.settermate.ui.LeaguesViewModel
 import com.corp.bookmate.settermate.ui.NavUiState
 import com.corp.bookmate.settermate.ui.ScheduleUiState
 import com.corp.bookmate.settermate.ui.TeamScheduleScreen
+import com.corp.bookmate.settermate.ui.YoursScreen
 import com.corp.bookmate.settermate.ui.components.DropDownList
 import com.corp.bookmate.settermate.ui.theme.SetterMateTheme
 import dagger.hilt.android.AndroidEntryPoint
+
+sealed class BottomNavDest {
+    object AllLeagues : BottomNavDest()
+    object Yours : BottomNavDest()
+}
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -56,28 +65,68 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             SetterMateTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeUi()
-                }
+                AppShell()
             }
         }
     }
 }
 
 @Composable
+fun AppShell() {
+    val currentDest = remember { mutableStateOf<BottomNavDest>(BottomNavDest.AllLeagues) }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = currentDest.value is BottomNavDest.AllLeagues,
+                    onClick = { currentDest.value = BottomNavDest.AllLeagues },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.volleyball_nav),
+                            contentDescription = "All Leagues",
+                            modifier = Modifier.size(24.dp),
+                        )
+                    },
+                    label = { Text("All Leagues") },
+                )
+                NavigationBarItem(
+                    selected = currentDest.value is BottomNavDest.Yours,
+                    onClick = { currentDest.value = BottomNavDest.Yours },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.favorite_unselected),
+                            contentDescription = "Yours",
+                            modifier = Modifier.size(24.dp),
+                        )
+                    },
+                    label = { Text("Yours") },
+                )
+            }
+        },
+    ) { innerPadding ->
+        when (currentDest.value) {
+            is BottomNavDest.AllLeagues -> HomeUi(modifier = Modifier.padding(innerPadding))
+            is BottomNavDest.Yours -> YoursScreen(modifier = Modifier.padding(innerPadding))
+        }
+    }
+}
+
+@Composable
 fun HomeUi(
+    modifier: Modifier = Modifier,
     viewModel: LeaguesViewModel = hiltViewModel(),
 ) {
     val selectedDay = remember { mutableStateOf(Pair("Select A Day", 0)) }
-    val selectedLeague = remember { mutableStateOf(Pair("Select A League", 0)) }
-    val showLeagues = remember { mutableStateOf(false) }
-    val leagueOptions = remember { mutableStateOf(emptyList<String>()) }
-    val selectedTeam = remember { mutableStateOf("") }
+    val selectedLeague = remember { mutableStateOf("Select A League") }
     val uiState = viewModel.uiState.collectAsStateWithLifecycle()
     val navState = viewModel.navState.collectAsStateWithLifecycle()
+    val leaguesState = viewModel.leaguesState.collectAsStateWithLifecycle()
+    val selectedTeam = viewModel.selectedTeam.collectAsStateWithLifecycle()
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(vertical = 24.dp, horizontal = 16.dp)
     ) {
@@ -96,20 +145,38 @@ fun HomeUi(
                 listOptions = daysMap.keys.toList()
             ) { day ->
                 viewModel.clearLeagueData()
-                selectedDay.value = daysMap.toList().find { it.first == day } ?: Pair("Select A Day", 0)
-                leagueOptions.value = viewModel.getLeagueOptionsByDay(selectedDay.value.second)
-                showLeagues.value = true
+                viewModel.clearLeagues()
+                selectedLeague.value = "Select A League"
+                selectedDay.value =
+                    daysMap.toList().find { it.first == day } ?: Pair("Select A Day", 0)
+                if (selectedDay.value.second != 0) {
+                    viewModel.fetchLeaguesByDay(selectedDay.value.second)
+                }
             }
             Spacer(modifier = Modifier.height(12.dp))
-            AnimatedVisibility(visible = showLeagues.value) {
-                DropDownList(
-                    dropDownTitle = selectedLeague.value.first,
-                    listOptions = leagueOptions.value,
-                ) { league ->
-                    selectedLeague.value = Pair(league, 0)
-                    val leagueId = viewModel.getLeagueId(selectedDay.value.second, league)
-                    viewModel.fetchSchedule(selectedDay.value.second, leagueId)
+            when (val ls = leaguesState.value) {
+                is LeaguesUiState.Loading -> CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                is LeaguesUiState.Success -> {
+                    AnimatedVisibility(visible = ls.leagues.isNotEmpty()) {
+                        DropDownList(
+                            dropDownTitle = selectedLeague.value,
+                            listOptions = ls.leagues.map { it.leagueName },
+                        ) { league ->
+                            selectedLeague.value = league
+                            val leagueId =
+                                ls.leagues.find { it.leagueName == league }?.leagueId ?: 0
+                            viewModel.fetchSchedule(selectedDay.value.second, leagueId)
+                        }
+                    }
                 }
+
+                is LeaguesUiState.Error -> Text(
+                    text = "Failed to load leagues: ${ls.message}",
+                    color = colorResource(R.color.WhiteSmoke),
+                    fontStyle = FontStyle.Italic,
+                )
+
+                else -> Unit
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
@@ -123,15 +190,21 @@ fun HomeUi(
             is ScheduleUiState.Success -> {
                 when (navState.value) {
                     NavUiState.Schedule -> TeamScheduleScreen(
-                        teamId = state.leagueData.schedule.find,
+                        teamId = state.leagueData.schedule.find {
+                            fuzzyTeamMatch(
+                                it.teamName,
+                                selectedTeam.value
+                            )
+                        }?.teamId ?: 0,
                         teamName = selectedTeam.value,
                         schedules = state.leagueData.schedule,
                     ) {
                         viewModel.navigate(NavUiState.Standings)
+                        viewModel.setSelectedTeam("")
                     }
 
                     NavUiState.Standings -> TeamStandingUi(state.leagueData.standings) { teamName ->
-                        selectedTeam.value = teamName
+                        viewModel.setSelectedTeam(teamName)
                         viewModel.navigate(NavUiState.Schedule)
                     }
                 }
@@ -147,6 +220,10 @@ fun HomeUi(
             }
 
             is ScheduleUiState.Idle -> Text(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                textAlign = TextAlign.Center,
                 text = "League Data will display here",
                 color = colorResource(R.color.WhiteSmoke),
                 fontStyle = FontStyle.Italic,
@@ -198,7 +275,9 @@ fun TeamStandingUi(teamStandings: List<TeamStanding>, onSelectTeam: (String) -> 
                     }
                 }
                 HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
                     thickness = 1.dp,
                     color = colorResource(R.color.LightSlateGray)
                 )
@@ -211,6 +290,6 @@ fun TeamStandingUi(teamStandings: List<TeamStanding>, onSelectTeam: (String) -> 
 @Composable
 fun GreetingPreview() {
     SetterMateTheme {
-        HomeUi()
+        AppShell()
     }
 }

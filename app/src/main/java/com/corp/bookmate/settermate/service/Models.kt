@@ -32,7 +32,14 @@ data class PlayTime(
     val time: String,
     val versusText: String,
     val team1Id: Int,
-    val team2Id: Int
+    val team2Id: Int,
+    val court: String = "",
+)
+
+data class ScheduleFetchResult(
+    val html: String,
+    val pdfText: String,
+    val courtMap: Map<String, String>
 )
 
 val daysMap = mapOf(

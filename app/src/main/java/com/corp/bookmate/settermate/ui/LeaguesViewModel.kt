@@ -8,8 +8,6 @@ import com.corp.bookmate.settermate.helpers.parseTeamStandings
 import com.corp.bookmate.settermate.service.LeagueData
 import com.corp.bookmate.settermate.service.LeagueMapping
 import com.corp.bookmate.settermate.service.SettersRepo
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,8 +27,34 @@ class LeaguesViewModel @Inject constructor(
     private val _navState = MutableStateFlow<NavUiState>(NavUiState.Standings)
     val navState: StateFlow<NavUiState> = _navState.asStateFlow()
 
+    private val _leaguesState = MutableStateFlow<LeaguesUiState>(LeaguesUiState.Idle)
+    val leaguesState: StateFlow<LeaguesUiState> = _leaguesState.asStateFlow()
+
+    private val _selectedTeam = MutableStateFlow("")
+    val selectedTeam: StateFlow<String> = _selectedTeam.asStateFlow()
+
+    fun setSelectedTeam(name: String) {
+        _selectedTeam.value = name
+    }
+
     fun navigate(navItem: NavUiState) {
         _navState.value = navItem
+    }
+
+    fun fetchLeaguesByDay(dayId: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _leaguesState.value = LeaguesUiState.Loading
+            try {
+                val leagues = repo.fetchLeaguesByDay(dayId)
+                _leaguesState.value = LeaguesUiState.Success(leagues)
+            } catch (e: Exception) {
+                _leaguesState.value = LeaguesUiState.Error(e.localizedMessage ?: "Unknown error")
+            }
+        }
+    }
+
+    fun clearLeagues() {
+        _leaguesState.value = LeaguesUiState.Idle
     }
 
     fun fetchSchedule(
@@ -46,9 +70,8 @@ class LeaguesViewModel @Inject constructor(
                     leagueId = leagueId
                 )
 
-                val html = response.first()
-                val standings = parseTeamStandings(html ?: "")
-                val schedule = parseLeagueScheduleText(response.last().orEmpty())
+                val standings = parseTeamStandings(response.html)
+                val schedule = parseLeagueScheduleText(response.pdfText, response.courtMap)
                 val leagueData = LeagueData(
                     standings = standings,
                     schedule = schedule
@@ -67,28 +90,13 @@ class LeaguesViewModel @Inject constructor(
     fun clearLeagueData() {
         _uiState.value = ScheduleUiState.Idle
     }
+}
 
-    fun getLeagueOptionsByDay(dayId: Int): List<String> {
-        val leagueMap = loadLeagueMappings()
-        return leagueMap.filter { it.dayId == dayId }.map { it.leagueName }
-    }
-
-    fun getLeagueId(dayId: Int, league: String): Int {
-        val leagueMap = loadLeagueMappings()
-        return leagueMap.find { it.dayId == dayId && it.leagueName == league }?.leagueId ?: 0
-    }
-
-    private fun loadLeagueMappings(): List<LeagueMapping> {
-        val json = context.assets
-            .open("leagues.json")
-            .bufferedReader()
-            .use { it.readText() }
-
-        return Gson().fromJson(
-            json,
-            object : TypeToken<List<LeagueMapping>>() {}.type
-        )
-    }
+sealed interface LeaguesUiState {
+    object Idle : LeaguesUiState
+    object Loading : LeaguesUiState
+    data class Success(val leagues: List<LeagueMapping>) : LeaguesUiState
+    data class Error(val message: String) : LeaguesUiState
 }
 
 sealed interface ScheduleUiState {

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="heading_extra_extra_large">36dp</dimen>
+    <dimen name="heading_extra_large">32dp</dimen>
+    <dimen name="heading_large">25dp</dimen>
+    <dimen name="heading_small">20dp</dimen>
+    <dimen name="body_large">18dp</dimen>
+    <dimen name="body_normal">16dp</dimen>
+    <dimen name="body_small">14dp</dimen>
+    <dimen name="body_extra_small">12dp</dimen>
+    <dimen name="body_extra_extra_small">8dp</dimen>
+    <dimen name="subscript">10.dp</dimen>
+</resources>

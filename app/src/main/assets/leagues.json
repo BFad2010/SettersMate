@@ -1,0 +1,137 @@
+[
+  {
+    "dayId": 1,
+    "leagueName": "Coed 4B",
+    "leagueId": 1844
+  },
+  {
+    "dayId": 1,
+    "leagueName": "Coed 4C",
+    "leagueId": 1845
+  },
+  {
+    "dayId": 1,
+    "leagueName": "Mens 4B",
+    "leagueId": 1754
+  },
+  {
+    "dayId": 1,
+    "leagueName": "Mens 4BB",
+    "leagueId": 1842
+  },
+  {
+    "dayId": 1,
+    "leagueName": "Mens 4C",
+    "leagueId": 1843
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Coed 4B",
+    "leagueId": 1825
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Coed 4C",
+    "leagueId": 1827
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Mens 4B",
+    "leagueId": 1838
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Mens 4C",
+    "leagueId": 1824
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Womens 4B",
+    "leagueId": 1822
+  },
+  {
+    "dayId": 2,
+    "leagueName": "Womens 4BB",
+    "leagueId": 1740
+  },
+  {
+    "dayId": 3,
+    "leagueName": "Coed 4B",
+    "leagueId": 1829
+  },
+  {
+    "dayId": 3,
+    "leagueName": "Coed 4C",
+    "leagueId": 1830
+  },
+  {
+    "dayId": 3,
+    "leagueName": "Coed 6D",
+    "leagueId": 1831
+  },
+  {
+    "dayId": 3,
+    "leagueName": "Mens 4B",
+    "leagueId": 1742
+  },
+  {
+    "dayId": 3,
+    "leagueName": "Mens 4C",
+    "leagueId": 1828
+  },
+  {
+    "dayId": 4,
+    "leagueName": "Coed 4C",
+    "leagueId": 1834
+  },
+  {
+    "dayId": 4,
+    "leagueName": "Coed 6C",
+    "leagueId": 1835
+  },
+  {
+    "dayId": 4,
+    "leagueName": "Womens 4C",
+    "leagueId": 1832
+  },
+  {
+    "dayId": 4,
+    "leagueName": "Womens 6D",
+    "leagueId": 1833
+  },
+  {
+    "dayId": 5,
+    "leagueName": "Coed 4B",
+    "leagueId": 1744
+  },
+  {
+    "dayId": 5,
+    "leagueName": "Coed 4C",
+    "leagueId": 1836
+  },
+  {
+    "dayId": 5,
+    "leagueName": "Coed 6D",
+    "leagueId": 1837
+  },
+  {
+    "dayId": 5,
+    "leagueName": "Mens 4C",
+    "leagueId": 1743
+  },
+  {
+    "dayId": 7,
+    "leagueName": "Coed 4C",
+    "leagueId": 1841
+  },
+  {
+    "dayId": 7,
+    "leagueName": "Mens 4C",
+    "leagueId": 1840
+  },
+  {
+    "dayId": 7,
+    "leagueName": "Womens 4C",
+    "leagueId": 1839
+  }
+]

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.corp.bookmate.settermate.helpers.parseLeagueScheduleText
 import com.corp.bookmate.settermate.helpers.parseTeamStandings
+import com.corp.bookmate.settermate.service.LeagueContext
 import com.corp.bookmate.settermate.service.LeagueData
 import com.corp.bookmate.settermate.service.LeagueMapping
 import com.corp.bookmate.settermate.service.SettersRepo
@@ -35,6 +36,13 @@ class LeaguesViewModel @Inject constructor(
 
     fun setSelectedTeam(name: String) {
         _selectedTeam.value = name
+    }
+
+    private val _leagueContext = MutableStateFlow<LeagueContext?>(null)
+    val leagueContext: StateFlow<LeagueContext?> = _leagueContext.asStateFlow()
+
+    fun setLeagueContext(context: LeagueContext) {
+        _leagueContext.value = context
     }
 
     fun navigate(navItem: NavUiState) {

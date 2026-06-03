@@ -35,7 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.colorResource
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,8 +69,8 @@ fun DropDownList(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                colorResource(R.color.DimGray),
-                                colorResource(R.color.DimGray)
+                                MaterialTheme.colorScheme.surfaceVariant,
+                                MaterialTheme.colorScheme.surfaceVariant
                             )
                         ),
                         shape = RoundedCornerShape(8.dp),
@@ -92,12 +92,12 @@ fun DropDownList(
             .fillMaxWidth()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(colorResource(R.color.Gray), colorResource(R.color.Gray))
+                    colors = listOf(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.onSurface)
                 ), alpha = 0.2f
             )
             .border(
                 1.dp,
-                color = colorResource(R.color.LightGrey),
+                color = MaterialTheme.colorScheme.outline,
                 shape = RoundedCornerShape(8.dp)
             )
             .clip(shape = RoundedCornerShape(8.dp))
@@ -113,7 +113,7 @@ fun DropDownList(
             Text(
                 text = dropDownTitle,
                 fontWeight = FontWeight.Bold,
-                color = colorResource(R.color.LightGrey),
+                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = dimensionResource(R.dimen.heading_small).value.sp,
             )
             Column(modifier = Modifier.size(24.dp)) {
@@ -127,7 +127,7 @@ fun DropDownList(
                             .size(24.dp),
                         painter = painterResource(R.drawable.up_arrow),
                         contentDescription = null,
-                        tint = colorResource(R.color.LightGrey),
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
                 AnimatedVisibility(
@@ -139,7 +139,7 @@ fun DropDownList(
                         modifier = Modifier.size(24.dp),
                         painter = painterResource(R.drawable.down_arrow),
                         contentDescription = null,
-                        tint = colorResource(R.color.LightGrey),
+                        tint = MaterialTheme.colorScheme.onSurface,
                     )
                 }
             }
@@ -160,13 +160,13 @@ fun DropDownItem(sortTitle: String, onSortItemClick: (String) -> Unit) {
             modifier = Modifier.fillMaxWidth(),
             text = sortTitle,
             textAlign = TextAlign.Center,
-            color = colorResource(R.color.GhostWhite),
+            color = MaterialTheme.colorScheme.onSurface,
             fontSize = dimensionResource(R.dimen.body_large).value.sp,
         )
         HorizontalDivider(
             modifier = Modifier.padding(vertical = 8.dp, horizontal = 8.dp),
             thickness = 1.dp,
-            color = colorResource(R.color.LightGrey)
+            color = MaterialTheme.colorScheme.outline
         )
     }
 }

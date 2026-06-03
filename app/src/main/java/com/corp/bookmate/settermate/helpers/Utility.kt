@@ -1,10 +1,10 @@
 package com.corp.bookmate.settermate.helpers
 
+import android.util.Log
 import com.corp.bookmate.settermate.service.LeagueSchedule
 import com.corp.bookmate.settermate.service.PlayTime
 import com.corp.bookmate.settermate.service.TeamStanding
 import com.corp.bookmate.settermate.service.WeekSchedule
-import android.util.Log
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
 import com.tom_roush.pdfbox.text.TextPosition
@@ -68,6 +68,7 @@ fun parseSchedulePdf(inputStream: InputStream): Pair<String, Map<String, String>
 
     // Pass 2 – character positions for court column detection
     data class RawChar(val ch: String, val x: Float, val y: Float, val width: Float)
+
     val rawChars = mutableListOf<RawChar>()
 
     val posStripper = object : PDFTextStripper() {
@@ -122,7 +123,9 @@ fun parseSchedulePdf(inputStream: InputStream): Pair<String, Map<String, String>
 
     // Locate the court-header line ("Court 2  Court 4  Court 7  Court 8")
     val courtRegex = Regex("""(?i)court\s*(\d+)""")
+
     data class CourtBound(val label: String, val x: Float)
+
     var courts = listOf<CourtBound>()
 
     for (line in lines) {
@@ -142,13 +145,16 @@ fun parseSchedulePdf(inputStream: InputStream): Pair<String, Map<String, String>
                     val tok = line.tokens[i]
                     if (tok.text.equals("Court", ignoreCase = true)
                         && i + 1 < line.tokens.size
-                        && line.tokens[i + 1].text.matches(Regex("\\d+"))) {
+                        && line.tokens[i + 1].text.matches(Regex("\\d+"))
+                    ) {
                         headers.add(CourtBound("Court ${line.tokens[i + 1].text}", tok.x))
                         i += 2
                     } else i++
                 }
             }
-            if (headers.size >= 2) { courts = headers; break }
+            if (headers.size >= 2) {
+                courts = headers; break
+            }
         }
     }
     Log.d("CourtParse", "courts detected: ${courts.map { "${it.label}@x=${it.x}" }}")
@@ -279,7 +285,8 @@ fun parseLeagueScheduleText(
             val team1Name = teamMap[team1] ?: "Unknown"
             val team2Name = teamMap[team2] ?: "Unknown"
 
-            val court = courtMap["${currentWeek}_${minOf(team1, team2)}_${maxOf(team1, team2)}"] ?: ""
+            val court =
+                courtMap["${currentWeek}_${minOf(team1, team2)}_${maxOf(team1, team2)}"] ?: ""
             weeks[currentWeek!!]?.add(
                 PlayTime(
                     time = time,
@@ -347,7 +354,7 @@ fun levenshtein(a: String, b: String): Int {
     for (i in 1..a.length) {
         for (j in 1..b.length) {
             dp[i][j] = if (a[i - 1] == b[j - 1]) dp[i - 1][j - 1]
-                       else 1 + minOf(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+            else 1 + minOf(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
         }
     }
     return dp[a.length][b.length]

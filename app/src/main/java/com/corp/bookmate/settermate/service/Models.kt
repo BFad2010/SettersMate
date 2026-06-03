@@ -42,6 +42,13 @@ data class ScheduleFetchResult(
     val courtMap: Map<String, String>
 )
 
+data class LeagueContext(
+    val dayName: String,
+    val dayId: Int,
+    val leagueName: String,
+    val leagueId: Int,
+)
+
 val daysMap = mapOf(
     "Sunday" to 7,
     "Monday" to 1,

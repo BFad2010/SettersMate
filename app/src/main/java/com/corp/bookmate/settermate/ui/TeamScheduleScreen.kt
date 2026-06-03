@@ -2,7 +2,6 @@ package com.corp.bookmate.settermate.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,16 +21,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.corp.bookmate.settermate.R
 import com.corp.bookmate.settermate.helpers.extractOpponent
 import com.corp.bookmate.settermate.service.LeagueSchedule
@@ -41,13 +39,20 @@ import com.corp.bookmate.settermate.service.LeagueSchedule
 fun TeamScheduleScreen(
     teamId: Int,
     teamName: String,
+    leagueName: String,
+    dayName: String,
+    dayId: Int,
+    leagueId: Int,
     schedules: List<LeagueSchedule>,
+    teamRecord: String,
+    modifier: Modifier = Modifier,
+    yoursViewModel: YoursViewModel = hiltViewModel(),
     onBack: () -> Unit,
 ) {
-    val teamSchedule = schedules.firstOrNull {
-        it.teamId == teamId
-    }
-    val isFavorite = remember { mutableStateOf(false) }
+    val favorites = yoursViewModel.favorites.collectAsStateWithLifecycle()
+    val isFavorite = favorites.value.any { it.leagueId == leagueId && it.teamName == teamName }
+
+    val teamSchedule = schedules.firstOrNull { it.teamId == teamId }
     BackHandler { onBack() }
 
     if (teamSchedule == null) {
@@ -64,29 +69,28 @@ fun TeamScheduleScreen(
                             .size(24.dp)
                             .clickable { onBack() },
                         painter = painterResource(R.drawable.back_arrow),
-                        tint = colorResource(R.color.WhiteSmoke),
+                        tint = MaterialTheme.colorScheme.onBackground,
                         contentDescription = null,
                     )
                 }
                 Text(
                     modifier = Modifier.weight(3f),
-                    text = "${teamName} Schedule",
+                    text = stringResource(R.string.schedule, teamName),
                     textAlign = TextAlign.Center,
-                    color = colorResource(R.color.WhiteSmoke),
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
             Text(
-                text = "No schedule found...",
-                color = colorResource(R.color.WhiteSmoke),
+                text = stringResource(R.string.no_schedule_found),
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(16.dp)
             )
         }
         return
     }
 
-
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
@@ -94,7 +98,6 @@ fun TeamScheduleScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(color = colorResource(R.color.Black))
                     .padding(bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -104,29 +107,44 @@ fun TeamScheduleScreen(
                             .size(24.dp)
                             .clickable { onBack() },
                         painter = painterResource(R.drawable.back_arrow),
-                        tint = colorResource(R.color.WhiteSmoke),
+                        tint = MaterialTheme.colorScheme.onBackground,
                         contentDescription = null,
                     )
                 }
-                Text(
-                    modifier = Modifier.weight(2f),
-                    text = "${teamName} Schedule",
-                    textAlign = TextAlign.Center,
-                    color = colorResource(R.color.WhiteSmoke),
-                )
+                Column(modifier = Modifier.weight(3f)) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.schedule, teamName),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = teamRecord,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+                        fontStyle = FontStyle.Italic,
+                    )
+                }
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
                     Icon(
                         modifier = Modifier
                             .size(24.dp)
                             .clickable {
-                                // change this to set favorite through viewmodel
-                                isFavorite.value = !isFavorite.value
+                                yoursViewModel.toggleFavorite(
+                                    teamName = teamName,
+                                    leagueName = leagueName,
+                                    dayName = dayName,
+                                    dayId = dayId,
+                                    leagueId = leagueId,
+                                )
                             },
-                        painter = if (isFavorite.value) painterResource(R.drawable.favorite_selected) else painterResource(
-                            R.drawable.favorite_unselected
-                        ),
-                        tint = colorResource(R.color.WhiteSmoke),
-                        contentDescription = null,
+                        painter = if (isFavorite)
+                            painterResource(R.drawable.favorite_selected)
+                        else
+                            painterResource(R.drawable.favorite_unselected),
+                        tint = MaterialTheme.colorScheme.onBackground,
+                        contentDescription = if (isFavorite) "Remove from Yours" else "Add to Yours",
                     )
                 }
             }
@@ -149,7 +167,7 @@ fun TeamScheduleScreen(
                         Text(
                             text = "Week ${week.weekNumber} - ${week.date}",
                             style = MaterialTheme.typography.titleMedium,
-                            color = colorResource(R.color.WhiteSmoke),
+                            color = MaterialTheme.colorScheme.onBackground,
                         )
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -168,14 +186,13 @@ fun TeamScheduleScreen(
                                 Text(
                                     text = "${playTime.time} vs $opponent",
                                     style = MaterialTheme.typography.bodyLarge,
-                                    color = colorResource(R.color.WhiteSmoke),
-                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onBackground,
                                 )
                                 if (playTime.court.isNotEmpty()) {
                                     Text(
                                         text = playTime.court,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = colorResource(R.color.WhiteSmoke),
+                                        color = MaterialTheme.colorScheme.onBackground,
                                         fontStyle = FontStyle.Italic,
                                     )
                                 }
@@ -185,9 +202,9 @@ fun TeamScheduleScreen(
                 }
             } else {
                 Text(
-                    text = "No Game Data",
+                    text = stringResource(R.string.no_game_data),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = colorResource(R.color.WhiteSmoke),
+                    color = MaterialTheme.colorScheme.onBackground,
                 )
             }
         }

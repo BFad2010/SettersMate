@@ -1,6 +1,10 @@
 package com.corp.bookmate.settermate.di
 
 import android.content.Context
+import androidx.room.Room
+import com.corp.bookmate.settermate.data.FavoriteTeamDao
+import com.corp.bookmate.settermate.data.FavoritesRepo
+import com.corp.bookmate.settermate.data.SetterMateDatabase
 import com.corp.bookmate.settermate.service.SettersApi
 import com.corp.bookmate.settermate.service.SettersRepo
 import dagger.Module
@@ -9,7 +13,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import org.intellij.lang.annotations.PrintFormat
 import retrofit2.Retrofit
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import javax.inject.Singleton
@@ -47,4 +50,16 @@ object AppModule {
     @Provides
     @Singleton
     fun provideRepo(api: SettersApi): SettersRepo = SettersRepo(api)
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): SetterMateDatabase =
+        Room.databaseBuilder(context, SetterMateDatabase::class.java, "settermate_db").build()
+
+    @Provides
+    fun provideFavoriteTeamDao(db: SetterMateDatabase): FavoriteTeamDao = db.favoriteTeamDao()
+
+    @Provides
+    @Singleton
+    fun provideFavoritesRepo(dao: FavoriteTeamDao): FavoritesRepo = FavoritesRepo(dao)
 }

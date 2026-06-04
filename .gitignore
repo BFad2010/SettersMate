@@ -13,3 +13,13 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Gradle build outputs (all modules)
+**/build/
+
+# Xcode user data (not shared between developers)
+xcuserdata/
+*.xcuserstate
+
+# Kotlin/Native caches
+.konan/

@@ -1,0 +1,21 @@
+CREATE TABLE FavoriteTeam (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    teamName TEXT NOT NULL,
+    leagueName TEXT NOT NULL,
+    dayName TEXT NOT NULL,
+    dayId INTEGER NOT NULL,
+    leagueId INTEGER NOT NULL
+);
+
+getAllFavorites:
+SELECT * FROM FavoriteTeam ORDER BY dayName, leagueName, teamName;
+
+getFavorite:
+SELECT * FROM FavoriteTeam WHERE teamName = ? AND leagueId = ? LIMIT 1;
+
+insertFavorite:
+INSERT OR REPLACE INTO FavoriteTeam (teamName, leagueName, dayName, dayId, leagueId)
+VALUES (?, ?, ?, ?, ?);
+
+deleteFavorite:
+DELETE FROM FavoriteTeam WHERE teamName = ? AND leagueId = ?;

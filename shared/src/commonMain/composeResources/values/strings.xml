@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">SetterMate</string>
+    <string name="close">Close</string>
+    <string name="for_more_information_on_leagues_visit">For more information on Leagues visit - </string>
+    <string name="cherrygrovesportscenter_com">cherrygrovesportscenter.com</string>
+    <string name="for_app_assistance">For app assistance - \n</string>
+    <string name="contact_us_here">Contact Us Here</string>
+    <string name="need_help">Need\nhelp?</string>
+    <string name="all_leagues">All Leagues</string>
+    <string name="welcome_to_setters_mate">Welcome to Setters Mate</string>
+    <string name="volleyball_scheduling_made_easy">Volleyball Scheduling Made easy!</string>
+    <string name="failed_to_load_leagues">Failed to load leagues: %1$s</string>
+    <string name="select_a_day_and_league_above">Select a Day and League above \n to view League Data and Schedules.</string>
+    <string name="yours">Yours</string>
+    <string name="a_team_for_quicker_schedule_viewing"> a Team for quicker Schedule Viewing!</string>
+    <string name="and">AND</string>
+    <string name="no_favorites_yet">No favorites yet</string>
+    <string name="star_a_team_schedule_to_save_it_here">Star a team schedule to save it here</string>
+    <string name="your_teams">Your Teams</string>
+    <string name="view_schedule">View Schedule</string>
+    <string name="no_schedule_found">No schedule found...</string>
+    <string name="no_game_data">No Game Data</string>
+</resources>

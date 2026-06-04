@@ -23,3 +23,6 @@ xcuserdata/
 
 # Kotlin/Native caches
 .konan/
+
+# Kotlin metadata cache
+.kotlin/

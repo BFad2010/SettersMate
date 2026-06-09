@@ -54,11 +54,45 @@ import com.corp.bookmate.settermate.ui.components.DropDownList
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import settermate.shared.generated.resources.Res
+import settermate.shared.generated.resources.back_arrow
 import settermate.shared.generated.resources.chevron_right
 import settermate.shared.generated.resources.favorite_selected
 import settermate.shared.generated.resources.favorite_unselected
 import settermate.shared.generated.resources.volleyball_background_tropical
 import settermate.shared.generated.resources.volleyball_nav
+
+private const val FETCH_ERROR_MESSAGE =
+    "Sorry, but there was an error fetching Schedule data...\nPlease check your connection and try again."
+
+@Composable
+fun ErrorView(
+    modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
+) {
+    Column(
+        modifier = modifier.fillMaxSize().padding(16.dp),
+    ) {
+        if (onBack != null) {
+            Icon(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clickable { onBack() },
+                painter = painterResource(Res.drawable.back_arrow),
+                tint = MaterialTheme.colorScheme.onBackground,
+                contentDescription = "Back",
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = FETCH_ERROR_MESSAGE,
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
+}
 
 sealed class BottomNavDest {
     object AllLeagues : BottomNavDest()
@@ -279,11 +313,7 @@ fun HomeUi(
                         }
                     }
                 }
-                is LeaguesUiState.Error -> Text(
-                    text = "Failed to load leagues: ${ls.message}",
-                    color = MaterialTheme.colorScheme.onBackground,
-                    fontStyle = FontStyle.Italic,
-                )
+                is LeaguesUiState.Error -> ErrorView()
                 else -> Unit
             }
         }
@@ -315,11 +345,10 @@ fun HomeUi(
                     }
                 }
             }
-            is ScheduleUiState.Error -> Text(
-                text = state.message,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontStyle = FontStyle.Italic,
-                fontSize = 16.sp,
+            is ScheduleUiState.Error -> ErrorView(
+                onBack = if (navState is NavUiState.Schedule) {
+                    { viewModel.navigate(NavUiState.Standings); viewModel.setSelectedTeam("") }
+                } else null,
             )
             is ScheduleUiState.Idle -> Column(
                 modifier = Modifier.fillMaxSize(),

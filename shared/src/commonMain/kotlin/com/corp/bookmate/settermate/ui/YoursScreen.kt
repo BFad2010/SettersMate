@@ -71,9 +71,10 @@ fun YoursScreen(
                     )
                 }
                 is ScheduleUiState.Error -> {
-                    Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = state.message, color = MaterialTheme.colorScheme.onBackground, fontStyle = FontStyle.Italic)
-                    }
+                    ErrorView(
+                        modifier = modifier,
+                        onBack = { viewModel.navigateToList() },
+                    )
                 }
                 else -> {}
             }

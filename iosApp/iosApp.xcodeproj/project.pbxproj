@@ -313,6 +313,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-ObjC",
+					"-Wl,-U,_OBJC_CLASS_$_UIViewLayoutRegion",
 					"-lsqlite3",
 				);
 				FRAMEWORK_SEARCH_PATHS = (
@@ -346,6 +348,8 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
+					"-ObjC",
+					"-Wl,-U,_OBJC_CLASS_$_UIViewLayoutRegion",
 					"-lsqlite3",
 				);
 				FRAMEWORK_SEARCH_PATHS = (

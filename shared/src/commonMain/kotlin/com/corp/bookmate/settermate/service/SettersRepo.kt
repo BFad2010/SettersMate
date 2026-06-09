@@ -42,12 +42,20 @@ class SettersRepo(private val client: HttpClient) {
         val html = leagueResponse.bodyAsText()
 
         val scheduleUrl = extractSchedulePdfUrl(html) ?: ""
+        println("[SettersRepo] scheduleUrl='$scheduleUrl'")
         val (pdfText, courtMap) = if (scheduleUrl.isNotEmpty()) {
             val pdfResponse = client.get(scheduleUrl)
+            println("[SettersRepo] PDF response status=${pdfResponse.status}")
             if (pdfResponse.status.isSuccess()) {
-                parseSchedulePdf(pdfResponse.readRawBytes())
+                val bytes = pdfResponse.readRawBytes()
+                println("[SettersRepo] PDF bytes=${bytes.size}")
+                parseSchedulePdf(bytes)
             } else Pair("", emptyMap())
-        } else Pair("", emptyMap())
+        } else {
+            println("[SettersRepo] No schedule PDF URL found in HTML")
+            Pair("", emptyMap())
+        }
+        println("[SettersRepo] pdfText length=${pdfText.length}")
 
         return ScheduleFetchResult(html = html, pdfText = pdfText, courtMap = courtMap)
     }

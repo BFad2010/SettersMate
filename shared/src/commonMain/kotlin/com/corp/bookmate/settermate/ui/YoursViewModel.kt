@@ -55,10 +55,15 @@ class YoursViewModel(
             _scheduleState.value = ScheduleUiState.Loading
             try {
                 val result = scheduleRepo.fetchSchedule(favorite.dayId.toInt(), favorite.leagueId.toInt())
+                val standings = parseTeamStandings(result.html)
                 _scheduleState.value = ScheduleUiState.Success(
                     LeagueData(
-                        standings = parseTeamStandings(result.html),
-                        schedule = parseLeagueScheduleText(result.pdfText, result.courtMap),
+                        standings = standings,
+                        schedule = parseLeagueScheduleText(
+                            rawText = result.pdfText,
+                            courtMap = result.courtMap,
+                            standingsNames = standings.map { it.name },
+                        ),
                     )
                 )
             } catch (e: Exception) {

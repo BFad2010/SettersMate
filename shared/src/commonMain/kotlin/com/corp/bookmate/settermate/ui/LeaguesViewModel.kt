@@ -53,10 +53,15 @@ class LeaguesViewModel(private val repo: SettersRepo) : ViewModel() {
             _uiState.value = ScheduleUiState.Loading
             try {
                 val response = repo.fetchSchedule(day = leagueDay, leagueId = leagueId)
+                val standings = parseTeamStandings(response.html)
                 _uiState.value = ScheduleUiState.Success(
                     LeagueData(
-                        standings = parseTeamStandings(response.html),
-                        schedule = parseLeagueScheduleText(response.pdfText, response.courtMap),
+                        standings = standings,
+                        schedule = parseLeagueScheduleText(
+                            rawText = response.pdfText,
+                            courtMap = response.courtMap,
+                            standingsNames = standings.map { it.name },
+                        ),
                     )
                 )
             } catch (e: Exception) {

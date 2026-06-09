@@ -171,6 +171,32 @@ fun AppShell() {
                             )
                         }
                     }
+                    HorizontalDivider()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(color = Color.Black.copy(alpha = 0.05f))
+                            .clickable {
+                                uriHandler.openUri("https://www.termsfeed.com/live/09569d93-92b2-4d79-a065-fbc9f9975dd2")
+                                showHelpDialog.value = false
+                            }
+                            .padding(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            text = "Privacy Policy",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(Res.drawable.chevron_right),
+                            tint = MaterialTheme.colorScheme.onBackground,
+                            contentDescription = null,
+                        )
+                    }
                 }
             },
         )

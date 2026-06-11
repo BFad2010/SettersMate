@@ -25,8 +25,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.corp.bookmate.settermate.helpers.BackHandlerWrapper
 import com.corp.bookmate.settermate.helpers.extractOpponent
@@ -51,6 +55,7 @@ fun TeamScheduleScreen(
     modifier: Modifier = Modifier,
     yoursViewModel: YoursViewModel = koinViewModel(),
     onBack: () -> Unit,
+    onViewPdf: () -> Unit = {},
 ) {
     val favorites by yoursViewModel.favorites.collectAsState()
     val isFavorite = favorites.any { it.leagueId == leagueId.toLong() && it.teamName == teamName }
@@ -139,6 +144,21 @@ fun TeamScheduleScreen(
                 )
             }
         }
+
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .clickable { onViewPdf() },
+            text = buildAnnotatedString {
+                withStyle(SpanStyle(
+                    textDecoration = TextDecoration.Underline,
+                    fontStyle = FontStyle.Italic,
+                    color = MaterialTheme.colorScheme.onBackground,
+                )) { append("View as PDF") }
+            },
+            textAlign = TextAlign.Center,
+        )
 
         LazyColumn(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),

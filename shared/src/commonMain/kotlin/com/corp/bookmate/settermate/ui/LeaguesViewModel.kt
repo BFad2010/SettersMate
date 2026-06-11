@@ -31,11 +31,23 @@ class LeaguesViewModel(private val repo: SettersRepo) : ViewModel() {
     private val _leagueContext = MutableStateFlow<LeagueContext?>(null)
     val leagueContext: StateFlow<LeagueContext?> = _leagueContext.asStateFlow()
 
+    private val _tourneyUrl = MutableStateFlow<String?>(null)
+    val tourneyUrl: StateFlow<String?> = _tourneyUrl.asStateFlow()
+
     fun setSelectedTeam(name: String) { _selectedTeam.value = name }
     fun setLeagueContext(ctx: LeagueContext) { _leagueContext.value = ctx }
     fun navigate(navItem: NavUiState) { _navState.value = navItem }
     fun clearLeagues() { _leaguesState.value = LeaguesUiState.Idle }
     fun clearLeagueData() { _uiState.value = ScheduleUiState.Idle }
+    fun clearTourneyUrl() { _tourneyUrl.value = null }
+
+    fun fetchTourneyScheduleUrl(day: Int, leagueId: Int) {
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                _tourneyUrl.value = repo.fetchFirstPdfUrl(day, leagueId)
+            } catch (_: Exception) {}
+        }
+    }
 
     fun fetchLeaguesByDay(dayId: Int) {
         viewModelScope.launch(Dispatchers.Default) {
@@ -54,15 +66,16 @@ class LeaguesViewModel(private val repo: SettersRepo) : ViewModel() {
             try {
                 val response = repo.fetchSchedule(day = leagueDay, leagueId = leagueId)
                 val standings = parseTeamStandings(response.html)
-                _uiState.value = ScheduleUiState.Success(
-                    LeagueData(
-                        standings = standings,
-                        schedule = parseLeagueScheduleText(
-                            rawText = response.pdfText,
-                            courtMap = response.courtMap,
-                            standingsNames = standings.map { it.name },
-                        ),
+                val standingsNames = standings.map { it.name }
+                val schedule = response.pdfResults.flatMap { (pdfText, courtMap) ->
+                    parseLeagueScheduleText(
+                        rawText = pdfText,
+                        courtMap = courtMap,
+                        standingsNames = standingsNames,
                     )
+                }
+                _uiState.value = ScheduleUiState.Success(
+                    LeagueData(standings = standings, schedule = schedule)
                 )
             } catch (e: Exception) {
                 _uiState.value = ScheduleUiState.Error(e.message ?: "Unknown error")

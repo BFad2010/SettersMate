@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
@@ -40,6 +41,13 @@ fun YoursScreen(
     val scheduleState by viewModel.scheduleState.collectAsState()
     val selectedTeam by viewModel.selectedTeam.collectAsState()
     val leagueContext by viewModel.leagueContext.collectAsState()
+    val tourneyUrl by viewModel.tourneyUrl.collectAsState()
+    val uriHandler = LocalUriHandler.current
+
+    tourneyUrl?.let { url ->
+        uriHandler.openUri(url)
+        viewModel.clearTourneyUrl()
+    }
 
     BackHandlerWrapper(enabled = navState is YoursNavState.Schedule) {
         viewModel.navigateToList()
@@ -67,6 +75,9 @@ fun YoursScreen(
                         leagueId = ctx?.leagueId ?: 0,
                         schedules = state.leagueData.schedule,
                         teamRecord = state.leagueData.standings.find { it.name == selectedTeam }?.record.orEmpty(),
+                        onViewPdf = {
+                            viewModel.fetchTourneyScheduleUrl(ctx?.dayId ?: 0, ctx?.leagueId ?: 0)
+                        },
                         onBack = { viewModel.navigateToList() },
                     )
                 }

@@ -285,6 +285,13 @@ fun HomeUi(
     val leaguesState by viewModel.leaguesState.collectAsState()
     val selectedTeam by viewModel.selectedTeam.collectAsState()
     val leagueContext by viewModel.leagueContext.collectAsState()
+    val tourneyUrl by viewModel.tourneyUrl.collectAsState()
+    val uriHandler = LocalUriHandler.current
+
+    tourneyUrl?.let { url ->
+        uriHandler.openUri(url)
+        viewModel.clearTourneyUrl()
+    }
 
     Column(
         modifier = modifier
@@ -329,13 +336,17 @@ fun HomeUi(
                         ) { league ->
                             selectedLeague.value = league
                             val leagueId = ls.leagues.find { it.leagueName == league }?.leagueId ?: 0
-                            viewModel.setLeagueContext(LeagueContext(
-                                dayName = selectedDay.value.first,
-                                dayId = selectedDay.value.second,
-                                leagueName = league,
-                                leagueId = leagueId,
-                            ))
-                            viewModel.fetchSchedule(selectedDay.value.second, leagueId)
+                            if (league.contains("Tourney", ignoreCase = true)) {
+                                viewModel.fetchTourneyScheduleUrl(selectedDay.value.second, leagueId)
+                            } else {
+                                viewModel.setLeagueContext(LeagueContext(
+                                    dayName = selectedDay.value.first,
+                                    dayId = selectedDay.value.second,
+                                    leagueName = league,
+                                    leagueId = leagueId,
+                                ))
+                                viewModel.fetchSchedule(selectedDay.value.second, leagueId)
+                            }
                         }
                     }
                 }
@@ -361,10 +372,17 @@ fun HomeUi(
                         leagueId = leagueContext?.leagueId ?: 0,
                         schedules = state.leagueData.schedule,
                         teamRecord = state.leagueData.standings.find { it.name == selectedTeam }?.record.orEmpty(),
-                    ) {
-                        viewModel.navigate(NavUiState.Standings)
-                        viewModel.setSelectedTeam("")
-                    }
+                        onViewPdf = {
+                            viewModel.fetchTourneyScheduleUrl(
+                                leagueContext?.dayId ?: 0,
+                                leagueContext?.leagueId ?: 0,
+                            )
+                        },
+                        onBack = {
+                            viewModel.navigate(NavUiState.Standings)
+                            viewModel.setSelectedTeam("")
+                        },
+                    )
                     NavUiState.Standings -> TeamStandingUi(state.leagueData.standings) { teamName ->
                         viewModel.setSelectedTeam(teamName)
                         viewModel.navigate(NavUiState.Schedule)

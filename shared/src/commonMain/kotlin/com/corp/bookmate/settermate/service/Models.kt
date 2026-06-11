@@ -38,8 +38,7 @@ data class PlayTime(
 
 data class ScheduleFetchResult(
     val html: String,
-    val pdfText: String,
-    val courtMap: Map<String, String>
+    val pdfResults: List<Pair<String, Map<String, String>>>,
 )
 
 data class LeagueContext(

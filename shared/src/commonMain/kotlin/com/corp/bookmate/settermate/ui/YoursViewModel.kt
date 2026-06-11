@@ -56,19 +56,33 @@ class YoursViewModel(
             try {
                 val result = scheduleRepo.fetchSchedule(favorite.dayId.toInt(), favorite.leagueId.toInt())
                 val standings = parseTeamStandings(result.html)
-                _scheduleState.value = ScheduleUiState.Success(
-                    LeagueData(
-                        standings = standings,
-                        schedule = parseLeagueScheduleText(
-                            rawText = result.pdfText,
-                            courtMap = result.courtMap,
-                            standingsNames = standings.map { it.name },
-                        ),
+                val standingsNames = standings.map { it.name }
+                val schedule = result.pdfResults.flatMap { (pdfText, courtMap) ->
+                    parseLeagueScheduleText(
+                        rawText = pdfText,
+                        courtMap = courtMap,
+                        standingsNames = standingsNames,
                     )
+                }
+                _scheduleState.value = ScheduleUiState.Success(
+                    LeagueData(standings = standings, schedule = schedule)
                 )
             } catch (e: Exception) {
                 _scheduleState.value = ScheduleUiState.Error(e.message ?: "Unknown error")
             }
+        }
+    }
+
+    private val _tourneyUrl = MutableStateFlow<String?>(null)
+    val tourneyUrl: StateFlow<String?> = _tourneyUrl.asStateFlow()
+
+    fun clearTourneyUrl() { _tourneyUrl.value = null }
+
+    fun fetchTourneyScheduleUrl(day: Int, leagueId: Int) {
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                _tourneyUrl.value = scheduleRepo.fetchFirstPdfUrl(day, leagueId)
+            } catch (_: Exception) {}
         }
     }
 

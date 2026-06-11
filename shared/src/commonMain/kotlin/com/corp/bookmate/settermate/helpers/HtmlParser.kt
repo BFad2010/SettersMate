@@ -6,6 +6,7 @@ import com.fleeksoft.ksoup.Ksoup
 fun parseTeamStandings(html: String): List<TeamStanding> {
     val document = Ksoup.parse(html)
     val standings = mutableListOf<TeamStanding>()
+    val seen = mutableSetOf<String>()
     val rows = document.select("table tr")
     for (row in rows) {
         val columns = row.select("td")
@@ -14,7 +15,7 @@ fun parseTeamStandings(html: String): List<TeamStanding> {
             val record = columns[1].text().trim()
             val isHeader = teamName.equals("Team Name", ignoreCase = true)
             val hasValidRecord = record.matches(Regex("\\d+\\s-\\s\\d+"))
-            if (!isHeader && teamName.isNotEmpty() && hasValidRecord) {
+            if (!isHeader && teamName.isNotEmpty() && hasValidRecord && seen.add(teamName)) {
                 standings.add(TeamStanding(name = teamName, record = record))
             }
         }
@@ -22,9 +23,10 @@ fun parseTeamStandings(html: String): List<TeamStanding> {
     return standings
 }
 
-fun extractSchedulePdfUrl(html: String): String? {
+fun extractSchedulePdfUrls(html: String): List<String> {
     val document = Ksoup.parse(html)
-    val link = document.select("a:contains(View Schedule)").firstOrNull()
-    val relativeUrl = link?.attr("href") ?: return null
-    return "https://www.cherrygrovesportscenter.com$relativeUrl"
+    return document.select("a:contains(View Schedule)").mapNotNull { link ->
+        val relativeUrl = link.attr("href").takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+        "https://www.cherrygrovesportscenter.com$relativeUrl"
+    }
 }

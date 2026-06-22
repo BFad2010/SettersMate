@@ -29,11 +29,81 @@ private data class TextFragment(val text: String, val x: Double, val y: Double)
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun parseSchedulePdf(bytes: ByteArray): Pair<String, Map<String, String>> {
-    val text = extractPdfText(bytes)
-    return Pair(text, emptyMap())
+    val allFragments = extractFragments(bytes)
+    if (allFragments.isEmpty()) return Pair("", emptyMap())
+
+    // Group into lines by Y bucket (y increases upward in PDF coords).
+    // sortedByDescending gives reading order (top of page first).
+    val lines = allFragments
+        .groupBy { (it.y / 5.0).toInt() }
+        .entries
+        .sortedByDescending { it.key }
+        .mapNotNull { (_, row) ->
+            row.sortedBy { it.x }.takeIf { it.isNotEmpty() }
+        }
+
+    val text = lines.mapNotNull { row ->
+        row.joinToString(" ") { it.text.trim() }.trim().takeIf { it.isNotBlank() }
+    }.joinToString("\n")
+
+    val courtMap = buildCourtMap(lines)
+    return Pair(text, courtMap)
 }
 
-private fun extractPdfText(bytes: ByteArray): String {
+private fun buildCourtMap(lines: List<List<TextFragment>>): Map<String, String> {
+    val courtRegex = Regex("""(?i)court\s*(\d+)""")
+
+    data class CourtBound(val label: String, val x: Double)
+
+    var courts = listOf<CourtBound>()
+    for (row in lines) {
+        val fullText = row.joinToString(" ") { it.text }
+        if (courtRegex.findAll(fullText).count() >= 2) {
+            val headers = row.mapNotNull { frag ->
+                val m = courtRegex.find(frag.text) ?: return@mapNotNull null
+                CourtBound("Court ${m.groupValues[1]}", frag.x)
+            }
+            if (headers.size >= 2) { courts = headers; break }
+        }
+    }
+    if (courts.isEmpty()) return emptyMap()
+
+    fun courtForX(x: Double): String {
+        val sorted = courts.sortedBy { it.x }
+        if (x < sorted.first().x) return sorted.first().label
+        for (i in 0 until sorted.size - 1) {
+            val midpoint = (sorted[i].x + sorted[i + 1].x) / 2.0
+            if (x <= midpoint) return sorted[i].label
+        }
+        return sorted.last().label
+    }
+
+    val weekRegex = Regex("""^Week\s+(\d+)""", RegexOption.IGNORE_CASE)
+    val matchInline = Regex("""(\d+)\s*v\s*(\d+)""")
+    val courtMap = mutableMapOf<String, String>()
+    var currentWeek = 0
+
+    for (row in lines) {
+        val lineText = row.joinToString(" ") { it.text }
+        val weekMatch = weekRegex.find(lineText)
+        if (weekMatch != null) {
+            currentWeek = weekMatch.groupValues[1].toIntOrNull() ?: currentWeek
+            continue
+        }
+        if (currentWeek == 0 || currentWeek > 7) continue
+
+        for (frag in row) {
+            val m = matchInline.find(frag.text) ?: continue
+            val t1 = m.groupValues[1].toInt()
+            val t2 = m.groupValues[2].toInt()
+            courtMap["${currentWeek}_${minOf(t1, t2)}_${maxOf(t1, t2)}"] = courtForX(frag.x)
+        }
+    }
+
+    return courtMap
+}
+
+private fun extractFragments(bytes: ByteArray): List<TextFragment> {
     val allFragments = mutableListOf<TextFragment>()
     val endCRLF = "\r\nendstream".encodeToByteArray()
     val endLF   = "\nendstream".encodeToByteArray()
@@ -59,20 +129,7 @@ private fun extractPdfText(bytes: ByteArray): String {
         if ("TJ" !in content && "Tj" !in content) continue
         allFragments += parseContentStream(content)
     }
-
-    if (allFragments.isEmpty()) return ""
-
     return allFragments
-        .groupBy { (it.y / 5.0).toInt() }
-        .entries
-        .sortedByDescending { it.key }
-        .mapNotNull { (_, row) ->
-            row.sortedBy { it.x }
-                .joinToString(" ") { it.text.trim() }
-                .trim()
-                .takeIf { it.isNotBlank() }
-        }
-        .joinToString("\n")
 }
 
 // Returns the index right after "stream\r\n" / "stream\n", skipping any

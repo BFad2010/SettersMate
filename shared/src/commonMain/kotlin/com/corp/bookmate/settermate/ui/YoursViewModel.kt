@@ -57,12 +57,12 @@ class YoursViewModel(
                 val result = scheduleRepo.fetchSchedule(favorite.dayId.toInt(), favorite.leagueId.toInt())
                 val standings = parseTeamStandings(result.html)
                 val standingsNames = standings.map { it.name }
-                val schedule = result.pdfResults.flatMap { (pdfText, courtMap) ->
+                val schedule = result.pdfResults.flatMap { pdf ->
                     parseLeagueScheduleText(
-                        rawText = pdfText,
-                        courtMap = courtMap,
+                        rawText = pdf.text,
+                        courtMap = pdf.courtMap,
                         standingsNames = standingsNames,
-                    )
+                    ).map { it.copy(pdfUrl = pdf.url) }
                 }
                 _scheduleState.value = ScheduleUiState.Success(
                     LeagueData(standings = standings, schedule = schedule)

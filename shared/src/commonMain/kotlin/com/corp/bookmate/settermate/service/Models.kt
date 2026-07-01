@@ -20,6 +20,7 @@ data class LeagueSchedule(
     val teamId: Int,
     val teamName: String,
     val weeks: List<WeekSchedule>,
+    val pdfUrl: String = "",
 )
 
 data class WeekSchedule(
@@ -36,9 +37,15 @@ data class PlayTime(
     val court: String = "",
 )
 
+data class PdfResult(
+    val url: String,
+    val text: String,
+    val courtMap: Map<String, String>,
+)
+
 data class ScheduleFetchResult(
     val html: String,
-    val pdfResults: List<Pair<String, Map<String, String>>>,
+    val pdfResults: List<PdfResult>,
 )
 
 data class LeagueContext(

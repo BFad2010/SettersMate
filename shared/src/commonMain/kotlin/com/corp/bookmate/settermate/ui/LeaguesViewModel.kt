@@ -67,12 +67,12 @@ class LeaguesViewModel(private val repo: SettersRepo) : ViewModel() {
                 val response = repo.fetchSchedule(day = leagueDay, leagueId = leagueId)
                 val standings = parseTeamStandings(response.html)
                 val standingsNames = standings.map { it.name }
-                val schedule = response.pdfResults.flatMap { (pdfText, courtMap) ->
+                val schedule = response.pdfResults.flatMap { pdf ->
                     parseLeagueScheduleText(
-                        rawText = pdfText,
-                        courtMap = courtMap,
+                        rawText = pdf.text,
+                        courtMap = pdf.courtMap,
                         standingsNames = standingsNames,
-                    )
+                    ).map { it.copy(pdfUrl = pdf.url) }
                 }
                 _uiState.value = ScheduleUiState.Success(
                     LeagueData(standings = standings, schedule = schedule)

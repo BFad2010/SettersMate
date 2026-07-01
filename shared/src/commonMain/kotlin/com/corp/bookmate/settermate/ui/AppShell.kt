@@ -287,11 +287,7 @@ fun HomeUi(
     val leagueContext by viewModel.leagueContext.collectAsState()
     val tourneyUrl by viewModel.tourneyUrl.collectAsState()
     val uriHandler = LocalUriHandler.current
-
-    tourneyUrl?.let { url ->
-        uriHandler.openUri(url)
-        viewModel.clearTourneyUrl()
-    }
+    tourneyUrl?.let { url -> uriHandler.openUri(url); viewModel.clearTourneyUrl() }
 
     Column(
         modifier = modifier
@@ -364,7 +360,6 @@ fun HomeUi(
             is ScheduleUiState.Success -> {
                 when (navState) {
                     NavUiState.Schedule -> TeamScheduleScreen(
-                        teamId = state.leagueData.schedule.find { fuzzyTeamMatch(it.teamName, selectedTeam) }?.teamId ?: 0,
                         teamName = selectedTeam,
                         leagueName = leagueContext?.leagueName ?: "",
                         dayName = leagueContext?.dayName ?: "",
@@ -372,12 +367,6 @@ fun HomeUi(
                         leagueId = leagueContext?.leagueId ?: 0,
                         schedules = state.leagueData.schedule,
                         teamRecord = state.leagueData.standings.find { it.name == selectedTeam }?.record.orEmpty(),
-                        onViewPdf = {
-                            viewModel.fetchTourneyScheduleUrl(
-                                leagueContext?.dayId ?: 0,
-                                leagueContext?.leagueId ?: 0,
-                            )
-                        },
                         onBack = {
                             viewModel.navigate(NavUiState.Standings)
                             viewModel.setSelectedTeam("")

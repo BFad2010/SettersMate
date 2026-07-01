@@ -62,10 +62,10 @@ class SettersRepo(private val client: HttpClient) {
             if (pdfResponse.status.isSuccess()) {
                 val bytes = pdfResponse.readRawBytes()
                 println("[SettersRepo] PDF bytes=${bytes.size}")
-                parseSchedulePdf(bytes)
+                val (text, courtMap) = parseSchedulePdf(bytes)
+                PdfResult(url = url, text = text, courtMap = courtMap)
             } else null
         }
-        println("[SettersRepo] pdfResults count=${pdfResults.size}")
 
         return ScheduleFetchResult(html = html, pdfResults = pdfResults)
     }

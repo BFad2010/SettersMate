@@ -25,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -34,6 +35,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.corp.bookmate.settermate.helpers.BackHandlerWrapper
 import com.corp.bookmate.settermate.helpers.extractOpponent
+import com.corp.bookmate.settermate.helpers.fuzzyTeamMatch
 import com.corp.bookmate.settermate.service.LeagueSchedule
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -44,7 +46,6 @@ import settermate.shared.generated.resources.favorite_unselected
 
 @Composable
 fun TeamScheduleScreen(
-    teamId: Int,
     teamName: String,
     leagueName: String,
     dayName: String,
@@ -55,11 +56,11 @@ fun TeamScheduleScreen(
     modifier: Modifier = Modifier,
     yoursViewModel: YoursViewModel = koinViewModel(),
     onBack: () -> Unit,
-    onViewPdf: () -> Unit = {},
 ) {
     val favorites by yoursViewModel.favorites.collectAsState()
     val isFavorite = favorites.any { it.leagueId == leagueId.toLong() && it.teamName == teamName }
-    val teamSchedule = schedules.firstOrNull { it.teamId == teamId }
+    val teamSchedule = schedules.firstOrNull { fuzzyTeamMatch(it.teamName, teamName) }
+    val uriHandler = LocalUriHandler.current
 
     BackHandlerWrapper(onBack = onBack)
 
@@ -149,7 +150,7 @@ fun TeamScheduleScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp)
-                .clickable { onViewPdf() },
+                .clickable { teamSchedule?.pdfUrl?.takeIf { it.isNotEmpty() }?.let { uriHandler.openUri(it) } },
             text = buildAnnotatedString {
                 withStyle(SpanStyle(
                     textDecoration = TextDecoration.Underline,

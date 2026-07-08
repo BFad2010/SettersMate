@@ -73,6 +73,30 @@ class YoursViewModel(
         }
     }
 
+    fun retrySchedule() {
+        val ctx = _leagueContext.value ?: return
+        viewModelScope.launch(Dispatchers.Default) {
+            _scheduleState.value = ScheduleUiState.Loading
+            try {
+                val result = scheduleRepo.fetchSchedule(ctx.dayId, ctx.leagueId)
+                val standings = parseTeamStandings(result.html)
+                val standingsNames = standings.map { it.name }
+                val schedule = result.pdfResults.flatMap { pdf ->
+                    parseLeagueScheduleText(
+                        rawText = pdf.text,
+                        courtMap = pdf.courtMap,
+                        standingsNames = standingsNames,
+                    ).map { it.copy(pdfUrl = pdf.url) }
+                }
+                _scheduleState.value = ScheduleUiState.Success(
+                    LeagueData(standings = standings, schedule = schedule)
+                )
+            } catch (e: Exception) {
+                _scheduleState.value = ScheduleUiState.Error(e.message ?: "Unknown error")
+            }
+        }
+    }
+
     private val _tourneyUrl = MutableStateFlow<String?>(null)
     val tourneyUrl: StateFlow<String?> = _tourneyUrl.asStateFlow()
 

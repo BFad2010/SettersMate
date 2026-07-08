@@ -5,17 +5,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.corp.bookmate.settermate.helpers.BackHandlerWrapper
 import com.corp.bookmate.settermate.helpers.fuzzyTeamMatch
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import settermate.shared.generated.resources.Res
+import settermate.shared.generated.resources.chevron_right
 
 @Composable
 fun YoursScreen(
@@ -71,6 +74,7 @@ fun YoursScreen(
                     ErrorView(
                         modifier = modifier,
                         onBack = { viewModel.navigateToList() },
+                        onRetry = { viewModel.retrySchedule() },
                     )
                 }
                 else -> {}
@@ -87,32 +91,33 @@ fun YoursScreen(
             } else {
                 Column(modifier = modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        modifier = Modifier.padding(vertical = 8.dp),
+                        modifier = Modifier.padding(vertical = 12.dp),
                         text = "Your Teams",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         fontStyle = FontStyle.Italic,
                     )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     LazyColumn(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(favorites, key = { it.id }) { favorite ->
                             Card(
                                 modifier = Modifier.fillMaxWidth().clickable { viewModel.loadFavoriteSchedule(favorite) },
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(0.7f)),
                                 elevation = CardDefaults.cardElevation(4.dp),
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                                    verticalAlignment = Alignment.Bottom,
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
-                                    Column(modifier = Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
+                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                                         Text(
                                             text = "${favorite.dayName} ${favorite.leagueName}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onBackground,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontStyle = FontStyle.Italic,
                                         )
                                         Text(
@@ -122,13 +127,23 @@ fun YoursScreen(
                                             fontWeight = FontWeight.SemiBold,
                                         )
                                     }
-                                    Text(
-                                        text = "View Schedule",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontStyle = FontStyle.Italic,
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Text(
+                                            text = "View Schedule",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold,
+                                        )
+                                        Icon(
+                                            modifier = Modifier.size(16.dp),
+                                            painter = painterResource(Res.drawable.chevron_right),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            contentDescription = null,
+                                        )
+                                    }
                                 }
                             }
                         }

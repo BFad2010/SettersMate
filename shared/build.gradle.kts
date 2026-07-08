@@ -40,6 +40,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "shared"
             isStatic = true
+            linkerOpts("-framework", "EventKit")
         }
     }
 

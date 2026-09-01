@@ -90,7 +90,7 @@ private fun buildCourtMap(lines: List<List<TextFragment>>): Map<String, String> 
             currentWeek = weekMatch.groupValues[1].toIntOrNull() ?: currentWeek
             continue
         }
-        if (currentWeek == 0 || currentWeek > 7) continue
+        if (currentWeek == 0 || currentWeek > MAX_SCHEDULE_WEEKS) continue
 
         for (frag in row) {
             val m = matchInline.find(frag.text) ?: continue

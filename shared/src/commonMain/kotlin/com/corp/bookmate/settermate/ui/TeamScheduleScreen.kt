@@ -72,7 +72,9 @@ fun TeamScheduleScreen(
     onBack: () -> Unit,
 ) {
     val favorites by yoursViewModel.favorites.collectAsState()
-    val isFavorite = favorites.any { it.leagueId == leagueId.toLong() && it.teamName == teamName }
+    val isFavorite = favorites.any {
+        it.teamName == teamName && it.leagueName == leagueName && it.dayId == dayId.toLong()
+    }
     val teamSchedule = schedules.firstOrNull { fuzzyTeamMatch(it.teamName, teamName) }
     val uriHandler = LocalUriHandler.current
 
@@ -83,7 +85,8 @@ fun TeamScheduleScreen(
                 val opponent = extractOpponent(playTime.versusText, teamName)
                 CalendarEvent(
                     title = "$dayName $leagueName - Vs. $opponent",
-                    description = "Week ${week.weekNumber}",
+                    description = "Week ${week.weekNumber}" +
+                        if (playTime.court.isNotEmpty()) " • ${playTime.court}" else "",
                     dateString = week.date,
                     timeString = playTime.time,
                 )
@@ -106,30 +109,64 @@ fun TeamScheduleScreen(
     BackHandlerWrapper(onBack = onBack)
 
     if (teamSchedule == null) {
-        Column {
+        Column(modifier = modifier.fillMaxSize()) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 12.dp, bottom = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
+                        .clickable { onBack() },
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
-                        modifier = Modifier.size(24.dp).clickable { onBack() },
+                        modifier = Modifier.size(20.dp),
                         painter = painterResource(Res.drawable.back_arrow),
                         tint = MaterialTheme.colorScheme.onBackground,
-                        contentDescription = null,
+                        contentDescription = "Back",
                     )
                 }
                 Text(
-                    modifier = Modifier.weight(3f),
+                    modifier = Modifier.weight(1f),
                     text = "$teamName Schedule",
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.titleMedium,
                 )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
+                        .clickable {
+                            yoursViewModel.toggleFavorite(
+                                teamName = teamName,
+                                leagueName = leagueName,
+                                dayName = dayName,
+                                dayId = dayId,
+                                leagueId = leagueId,
+                            )
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        modifier = Modifier.size(20.dp),
+                        painter = if (isFavorite) painterResource(Res.drawable.favorite_selected)
+                        else painterResource(Res.drawable.favorite_unselected),
+                        tint = if (isFavorite) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onBackground,
+                        contentDescription = if (isFavorite) "Remove from Yours" else "Add to Yours",
+                    )
+                }
             }
             Text(
                 text = "No schedule found...",
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
             )
         }
         return
@@ -291,7 +328,7 @@ fun TeamScheduleScreen(
                     }
                 } else {
                     Text(
-                        text = "No Game Data",
+                        text = week.label.ifEmpty { "No Game Data" },
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                     )

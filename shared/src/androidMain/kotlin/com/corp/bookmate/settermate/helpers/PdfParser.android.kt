@@ -103,7 +103,7 @@ actual fun parseSchedulePdf(bytes: ByteArray): Pair<String, Map<String, String>>
         val lineText = line.tokens.joinToString(" ") { it.text }
         val weekMatch = weekRegex2.find(lineText)
         if (weekMatch != null) currentWeek = weekMatch.groupValues[1].toIntOrNull() ?: currentWeek
-        if (currentWeek == 0 || currentWeek > 7) continue
+        if (currentWeek == 0 || currentWeek > MAX_SCHEDULE_WEEKS) continue
 
         var i = 0
         while (i < line.tokens.size) {

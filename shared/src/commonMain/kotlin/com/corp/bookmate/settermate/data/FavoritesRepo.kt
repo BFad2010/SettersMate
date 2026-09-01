@@ -21,10 +21,10 @@ class FavoritesRepo(private val database: FavoritesDatabase) {
         leagueId: Int,
     ) = withContext(Dispatchers.Default) {
         val existing = database.favoriteTeamQueries
-            .getFavorite(teamName, leagueId.toLong())
+            .getFavorite(teamName, leagueName, dayId.toLong())
             .executeAsOneOrNull()
         if (existing != null) {
-            database.favoriteTeamQueries.deleteFavorite(teamName, leagueId.toLong())
+            database.favoriteTeamQueries.deleteFavorite(teamName, leagueName, dayId.toLong())
         } else {
             database.favoriteTeamQueries.insertFavorite(
                 teamName = teamName,
@@ -34,5 +34,12 @@ class FavoritesRepo(private val database: FavoritesDatabase) {
                 leagueId = leagueId.toLong(),
             )
         }
+    }
+
+    // The site re-assigns leagueId each season, so a saved favorite's leagueId can go
+    // stale. When we re-resolve the current id for a favorite (by leagueName/dayId),
+    // persist the correction here instead of leaving the stale id in place.
+    suspend fun updateLeagueId(id: Long, leagueId: Int) = withContext(Dispatchers.Default) {
+        database.favoriteTeamQueries.updateLeagueId(leagueId.toLong(), id)
     }
 }

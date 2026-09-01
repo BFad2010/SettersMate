@@ -27,6 +27,7 @@ data class WeekSchedule(
     val date: String,
     val weekNumber: Int,
     val versus: List<PlayTime>,
+    val label: String = "",
 )
 
 data class PlayTime(

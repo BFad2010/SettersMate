@@ -54,7 +54,23 @@ class YoursViewModel(
         viewModelScope.launch(Dispatchers.Default) {
             _scheduleState.value = ScheduleUiState.Loading
             try {
-                val result = scheduleRepo.fetchSchedule(favorite.dayId.toInt(), favorite.leagueId.toInt())
+                // The site re-assigns leagueId each season. Re-resolve the current id
+                // for this league by name before fetching, so a stale saved id (from a
+                // prior season) doesn't leave this favorite stuck on "No schedule found".
+                var leagueId = favorite.leagueId.toInt()
+                try {
+                    val currentId = scheduleRepo.fetchLeaguesByDay(favorite.dayId.toInt())
+                        .find { it.leagueName == favorite.leagueName }
+                        ?.leagueId
+                    if (currentId != null && currentId != leagueId) {
+                        leagueId = currentId
+                        _leagueContext.value = _leagueContext.value?.copy(leagueId = leagueId)
+                        favoritesRepo.updateLeagueId(favorite.id, leagueId)
+                    }
+                } catch (_: Exception) {
+                    // Fall back to the saved leagueId if re-resolution fails (offline, etc.)
+                }
+                val result = scheduleRepo.fetchSchedule(favorite.dayId.toInt(), leagueId)
                 val standings = parseTeamStandings(result.html)
                 val standingsNames = standings.map { it.name }
                 val schedule = result.pdfResults.flatMap { pdf ->

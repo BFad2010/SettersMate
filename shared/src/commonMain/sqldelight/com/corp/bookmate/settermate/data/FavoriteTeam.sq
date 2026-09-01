@@ -8,14 +8,17 @@ CREATE TABLE FavoriteTeam (
 );
 
 getAllFavorites:
-SELECT * FROM FavoriteTeam ORDER BY dayName, leagueName, teamName;
+SELECT * FROM FavoriteTeam ORDER BY (CASE WHEN dayId = 7 THEN 0 ELSE dayId END), leagueName, teamName;
 
 getFavorite:
-SELECT * FROM FavoriteTeam WHERE teamName = ? AND leagueId = ? LIMIT 1;
+SELECT * FROM FavoriteTeam WHERE teamName = ? AND leagueName = ? AND dayId = ? LIMIT 1;
 
 insertFavorite:
 INSERT OR REPLACE INTO FavoriteTeam (teamName, leagueName, dayName, dayId, leagueId)
 VALUES (?, ?, ?, ?, ?);
 
 deleteFavorite:
-DELETE FROM FavoriteTeam WHERE teamName = ? AND leagueId = ?;
+DELETE FROM FavoriteTeam WHERE teamName = ? AND leagueName = ? AND dayId = ?;
+
+updateLeagueId:
+UPDATE FavoriteTeam SET leagueId = ? WHERE id = ?;

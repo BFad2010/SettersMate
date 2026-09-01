@@ -5,6 +5,10 @@ import com.corp.bookmate.settermate.service.PlayTime
 import com.corp.bookmate.settermate.service.WeekSchedule
 import kotlinx.datetime.LocalDate
 
+// League sessions run up to ~20 weeks; a generous cap guards against parsing
+// garbage that happens to match the "Week N" pattern later in a PDF.
+const val MAX_SCHEDULE_WEEKS = 20
+
 /**
  * @param rawText       Position-sorted PDF text from the platform parser.
  * @param courtMap      Court-label map (Android only; empty on iOS).
@@ -108,23 +112,35 @@ fun parseLeagueScheduleText(
     }
 
     // ── Schedule parsing ─────────────────────────────────────────────────────
-    val weekRegex = Regex("""^Week\s+(\d+)""")
+    val weekRegex = Regex("""^Week\s+(\d+)\s*(.*)$""")
     val timeRegex = Regex("""\d{1,2}:\d{2}""")
     val matchupRegex = Regex("""(\d+)\s+v\s+(\d+)""")
     val dateRegex = Regex("""\d{1,2}/\d{1,2}/\d{2}""")
 
     val weeks = mutableMapOf<Int, MutableList<PlayTime>>()
+    val weekLabels = mutableMapOf<Int, String>()
     val collectedDates = mutableListOf<String>()
     var currentWeek: Int? = null
 
     for (line in lines) {
         val weekMatch = weekRegex.find(line)
         if (weekMatch != null) {
-            currentWeek = weekMatch.groupValues[1].toInt()
-            if (currentWeek <= 7) weeks[currentWeek] = mutableListOf()
+            val week = weekMatch.groupValues[1].toInt()
+            currentWeek = week
+            if (week <= MAX_SCHEDULE_WEEKS) {
+                weeks[week] = mutableListOf()
+                // A header like "Week 8 Tournament" has no fixed matchups that week —
+                // capture the trailing text as a label instead of treating it as missing data.
+                // (Skip lines where the header shares its row with real game data, e.g.
+                // "Week 1 6:20 1 v 2" — that's normal layout, not a special week.)
+                val trailing = weekMatch.groupValues[2].trim()
+                if (trailing.isNotEmpty() && timeRegex.find(trailing) == null && matchupRegex.find(trailing) == null) {
+                    weekLabels[week] = trailing
+                }
+            }
         }
         if (dateRegex.matches(line)) { collectedDates.add(line); continue }
-        if (currentWeek == null || currentWeek!! > 7) continue
+        if (currentWeek == null || currentWeek!! > MAX_SCHEDULE_WEEKS) continue
         val time = timeRegex.find(line)?.value ?: continue
         for (matchup in matchupRegex.findAll(line)) {
             val team1 = matchup.groupValues[1].toInt()
@@ -153,6 +169,7 @@ fun parseLeagueScheduleText(
                 date = sortedDates.getOrNull(weekNumber - 1) ?: "",
                 weekNumber = weekNumber,
                 versus = playTimes.filter { it.team1Id == teamId || it.team2Id == teamId },
+                label = weekLabels[weekNumber] ?: "",
             )
         }
         LeagueSchedule(teamId = teamId, teamName = teamName, weeks = weekSchedules)

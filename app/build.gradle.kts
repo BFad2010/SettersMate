@@ -14,8 +14,8 @@ android {
         applicationId = "com.corp.bookmate.settermate"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "4.2"
+        versionCode = 8
+        versionName = "4.4"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

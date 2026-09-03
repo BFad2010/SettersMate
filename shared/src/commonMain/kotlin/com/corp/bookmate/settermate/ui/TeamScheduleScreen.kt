@@ -42,6 +42,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.corp.bookmate.settermate.helpers.BackHandlerWrapper
@@ -313,6 +314,9 @@ fun TeamScheduleScreen(
                                         text = "${playTime.time} vs $opponent",
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onBackground,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f, fill = false).padding(end = 8.dp),
                                     )
                                     if (playTime.court.isNotEmpty()) {
                                         Text(

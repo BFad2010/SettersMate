@@ -95,7 +95,13 @@ actual fun parseSchedulePdf(bytes: ByteArray): Pair<String, Map<String, String>>
     }
 
     val weekRegex2 = Regex("""^Week\s+(\d+)""", RegexOption.IGNORE_CASE)
-    val matchInline = Regex("""(\d+)\s*v\s*(\d+)""")
+    val matchInline = Regex("""(\d{1,2})\s*v\s*(\d{1,2})""")
+    // Whichever court column sits closest to the time column can end up within the
+    // 8pt token-split threshold, gluing them into one token (e.g. "6:208 v 10").
+    // Strip a leading time prefix first so the match regex doesn't eat part of the
+    // time into the team id (which silently produces a courtMap key that never
+    // matches, leaving that week's court blank).
+    val leadingTimeRegex = Regex("""^\d{1,2}:\d{2}""")
     val courtMap = mutableMapOf<String, String>()
     var currentWeek = 0
 
@@ -108,7 +114,8 @@ actual fun parseSchedulePdf(bytes: ByteArray): Pair<String, Map<String, String>>
         var i = 0
         while (i < line.tokens.size) {
             val tok = line.tokens[i]
-            val inm = matchInline.find(tok.text)
+            val stripped = leadingTimeRegex.replaceFirst(tok.text, "").trim()
+            val inm = matchInline.find(stripped)
             if (inm != null) {
                 val t1 = inm.groupValues[1].toInt()
                 val t2 = inm.groupValues[2].toInt()
